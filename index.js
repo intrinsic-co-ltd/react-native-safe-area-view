@@ -15,6 +15,10 @@ import withOrientation from './withOrientation';
 // See https://mydevice.io/devices/ for device dimensions
 const X_WIDTH = 375;
 const X_HEIGHT = 812;
+const XR_WIDTH = 414;
+const XR_HEIGHT = 896;
+const XSM_WIDTH = 414;
+const XSM_HEIGHT = 896;
 const PAD_WIDTH = 768;
 const PAD_HEIGHT = 1024;
 
@@ -23,22 +27,21 @@ const { height: D_HEIGHT, width: D_WIDTH } = Dimensions.get('window');
 const { PlatformConstants = {} } = NativeModules;
 const { minor = 0 } = PlatformConstants.reactNativeVersion || {};
 
-const isIPhoneX = (() => {
+const existsNotch = (() => {
   if (Platform.OS === 'web') return false;
-
-  if (minor >= 50) {
-    return DeviceInfo.isIPhoneX_deprecated;
-  }
 
   return (
     Platform.OS === 'ios' &&
-    ((D_HEIGHT === X_HEIGHT && D_WIDTH === X_WIDTH) ||
-      (D_HEIGHT === X_WIDTH && D_WIDTH === X_HEIGHT))
+      (
+        ((D_HEIGHT === X_HEIGHT && D_WIDTH === X_WIDTH) || (D_HEIGHT === X_WIDTH && D_WIDTH === X_HEIGHT))              // iPhone X, iPhone XS
+        || ((D_HEIGHT === XR_HEIGHT && D_WIDTH === XR_WIDTH) || (D_HEIGHT === XR_WIDTH && D_WIDTH === XR_HEIGHT))       // iPhone XR
+        || ((D_HEIGHT === XSM_HEIGHT && D_WIDTH === XSM_WIDTH) || (D_HEIGHT === XSM_WIDTH && D_WIDTH === XSM_HEIGHT))   // iPhone XS Max
+      )
   );
 })();
 
 const isIPad = (() => {
-  if (Platform.OS !== 'ios' || isIPhoneX) return false;
+  if (Platform.OS !== 'ios' || existsNotch) return false;
 
   // if portrait and width is smaller than iPad width
   if (D_HEIGHT > D_WIDTH && D_WIDTH < PAD_WIDTH) {
@@ -73,7 +76,7 @@ const statusBarHeight = isLandscape => {
     }
   }
 
-  if (isIPhoneX) {
+  if (existsNotch) {
     return isLandscape ? 0 : 44;
   }
 
@@ -307,14 +310,14 @@ class SafeView extends Component {
       case 'horizontal':
       case 'right':
       case 'left': {
-        return isLandscape ? (isIPhoneX ? 44 : 0) : 0;
+        return isLandscape ? (existsNotch ? 44 : 0) : 0;
       }
       case 'vertical':
       case 'top': {
         return statusBarHeight(isLandscape);
       }
       case 'bottom': {
-        return isIPhoneX ? (isLandscape ? 24 : 34) : 0;
+        return existsNotch ? (isLandscape ? 24 : 34) : 0;
       }
     }
   };
